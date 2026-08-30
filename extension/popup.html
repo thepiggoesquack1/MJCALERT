@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="popup.css"></head>
+<body>
+  <h1>MRY Jet Center Alert</h1>
+  <p id="status" class="status">Disconnected</p>
+  <label>Backend URL<input id="backendUrl" type="url" value="http://127.0.0.1:8765"></label>
+  <label>Pairing token<input id="pairingToken" type="password" autocomplete="off"></label>
+  <label class="inline"><input id="mute" type="checkbox"> Mute notifications</label>
+  <label>Minimum confidence <span id="confidenceValue">80%</span><input id="minimumConfidence" type="range" min="0" max="1" step="0.05" value="0.8"></label>
+  <div class="buttons"><button id="save">Save & connect</button><button id="test">Test notification</button></div>
+  <p id="feedback" role="status"></p>
+  <section>
+    <h2>Authorized KMRY Ground audio</h2>
+    <p class="muted">Open and start the approved <a href="https://www.liveatc.net/hlisten.php?mount=kmry&amp;icao=kmry" target="_blank" rel="noreferrer">LiveATC KMRY player</a>, then return here while that tab is active.</p>
+    <p id="liveAtcStatus" class="status">Stopped</p>
+    <p id="liveAtcDetail" class="muted"></p>
+    <div class="buttons"><button id="startLiveAtc">Start KMRY audio</button><button id="stopLiveAtc">Stop</button></div>
+    <p id="lastTranscript" class="transcript"></p>
+  </section>
+  <h2>Recent alerts</h2><ul id="alerts"></ul>
+  <script src="popup.js"></script>
+</body></html>

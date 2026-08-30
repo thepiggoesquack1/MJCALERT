@@ -1,0 +1,15 @@
+:root { color-scheme: light dark; font: 13px system-ui, sans-serif; }
+body { width: 340px; margin: 0; padding: 16px; }
+h1 { font-size: 18px; margin: 0 0 8px; }
+h2 { font-size: 14px; margin-top: 18px; }
+label { display: block; margin: 10px 0; }
+input[type="url"], input[type="password"] { box-sizing: border-box; display: block; width: 100%; margin-top: 4px; padding: 7px; }
+.inline { display: flex; gap: 6px; align-items: center; }
+.status { border-radius: 12px; background: #5553; display: inline-block; padding: 4px 9px; }
+.buttons { display: flex; gap: 8px; }
+button { padding: 7px 10px; }
+ul { list-style: none; padding: 0; max-height: 220px; overflow: auto; }
+li { border-top: 1px solid #8885; padding: 8px 0; }
+.muted { opacity: .7; font-size: 12px; }
+section { border-top: 1px solid #8885; margin-top: 14px; padding-top: 4px; }
+.transcript { font-size: 12px; font-style: italic; max-height: 48px; overflow: auto; }

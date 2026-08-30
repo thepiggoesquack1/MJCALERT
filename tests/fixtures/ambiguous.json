@@ -1,0 +1,9 @@
+{
+  "aircraft": [
+    {"hex": "a12345", "registration": "N123AB", "on_ground": true, "ground_speed": 5, "seconds_since_seen": 1},
+    {"hex": "a92345", "registration": "N923AB", "on_ground": true, "ground_speed": 6, "seconds_since_seen": 2}
+  ],
+  "transcripts": [
+    {"text": "Citation three alpha bravo, taxi to Monterey Jet Center."}
+  ]
+}

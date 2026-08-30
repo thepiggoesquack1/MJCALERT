@@ -1,0 +1,9 @@
+{
+  "aircraft": [
+    {"hex": "a12345", "registration": "N123AB", "aircraft_type": "Citation 525", "on_ground": true, "ground_speed": 5, "seconds_since_seen": 1}
+  ],
+  "transcripts": [
+    {"text": "Citation three alpha bravo, say parking.", "offset_seconds": 0},
+    {"text": "Monterey Jet Center.", "offset_seconds": 10}
+  ]
+}

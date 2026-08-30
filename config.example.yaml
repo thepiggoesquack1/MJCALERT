@@ -1,0 +1,276 @@
+airport:
+  icao: KMRY
+  latitude: 36.587
+  longitude: -121.843
+  adsb_radius_nm: 5
+destination:
+  canonical_name: Monterey Jet Center
+  phrases: [monterey jet center, monterey jet, the jet center, jet center]
+  taxi_context_phrases: [taxi, parking, park, going to, headed to, destination, say parking, where are you parking]
+destinations:
+  - canonical_name: Monterey Jet Center
+    aliases: [monterey jet center, monterey jet, the jet center, jet center]
+  - canonical_name: Del Monte Aviation
+    aliases: [del monte aviation, del monte]
+speech:
+  provider: faster_whisper
+  model: small.en # medium.en and distil-large-v3 need more memory and processing time
+  # Hugging Face faster-whisper repositories are also accepted, for example:
+  # model: jacktol/whisper-medium.en-fine-tuned-for-ATC-faster-whisper
+  device: cpu
+  compute_type: int8
+  language: en
+  beam_size: 5
+  temperature: 0.0
+  condition_on_previous_text: false
+  use_internal_vad: false
+  fallback_model: base.en
+  allow_model_fallback: false # fallback is never silent; enable explicitly
+  use_static_aviation_prompt: true
+  use_adsb_dynamic_prompt: true
+  initial_prompt: >
+    Monterey Ground communications at KMRY.
+    Aircraft callsigns and registrations use aviation phraseology.
+    Monterey Jet Center. Del Monte Aviation.
+    Runway Two Eight Left. Runway One Zero Right.
+    Taxiways Alpha, Bravo, Charlie, Delta, Echo, Foxtrot,
+    Golf, Hotel, Juliet, Kilo, Lima, Mike.
+    Say parking. Taxi via Alpha and Echo.
+    Hold short. Continue down the runway. Turn left at Foxtrot.
+    November, Alpha, Bravo, Charlie, Delta, Echo, Foxtrot,
+    Golf, Hotel, India, Juliet, Kilo, Lima, Mike, Oscar,
+    Papa, Quebec, Romeo, Sierra, Tango, Uniform, Victor,
+    Whiskey, X-ray, Yankee, Zulu.
+    Zero, one, two, three, four, five, six, seven, eight, niner.
+  adsb_prompt:
+    enabled: true
+    refresh_seconds: 7
+    max_aircraft: 12
+speech_model_overrides:
+  jacktol/whisper-medium.en-fine-tuned-for-ATC-faster-whisper:
+    beam_size: 5
+    # Use float16 only on a compatible CUDA runtime; CPU users should select int8.
+    compute_type: float16
+    condition_on_previous_text: false
+  base.en:
+    beam_size: 5
+    compute_type: int8
+speech_performance:
+  excellent_rtf_max: 0.50
+  acceptable_rtf_max: 0.80
+  risky_rtf_max: 1.00
+  live_warning_rtf: 0.80
+  rolling_window: 5
+benchmark:
+  model_timeout_seconds: 180
+audio:
+  sample_rate: 16000
+  frame_duration_ms: 30
+  vad_aggressiveness: 2
+  pre_roll_ms: 300
+  end_silence_ms: 650
+  max_transmission_seconds: 15
+  save_debug_audio: false
+  debug_audio_directory: data/debug_audio
+  preprocessing:
+    enabled: true
+    sample_rate: 16000
+    high_pass_hz: 275
+    low_pass_hz: 3800
+    normalize: true
+    target_peak_dbfs: -3.0
+    noise_reduction: false
+    limiter: true
+audio_classifier:
+  enabled: false # enable only after deploying a reviewed local model
+  backend: local
+  model_path: data/models/atc_intent_classifier
+  sample_rate: 16000
+  confidence_threshold: 0.80
+  strong_confidence_threshold: 0.92
+  correction_threshold: 0.85
+  noise_rejection_threshold: 0.65
+  inference_timeout_seconds: 5
+  allow_whisper_fallback: true
+  require_adsb_for_notification: true
+  log_raw_scores: false
+audio_classifier_labels:
+  destinations:
+    [monterey_jet_center, del_monte_aviation, other_or_unknown_destination, no_destination]
+  intents:
+    - taxi_or_route_to_destination
+    - parking_statement
+    - parking_prompt_response
+    - correction_or_destination_change
+    - weak_destination_mention
+    - no_relevant_intent
+    - unintelligible_or_noise
+training_data:
+  enabled: false # monitoring saves segmented review candidates only when explicitly enabled
+  directory: data/training_clips
+  save_uncertain_only: true
+  save_all_candidate_events: false
+  save_audio: true # required for Play Clip/training; false keeps metadata only
+  save_transcript: true
+  save_adsb_context: true
+  save_classifier_scores: true
+  redact_pairing_tokens: true
+audio_augmentation:
+  enabled: false
+  random_seed: 457
+  noise_probability: 0.35
+  maximum_noise_amplitude: 0.025
+  gain_range: [0.8, 1.2]
+  clipping_probability: 0.10
+  dropout_probability: 0.10
+  band_pass_probability: 0.25
+  band_pass_low_hz: 250
+  band_pass_high_hz: 4000
+  compression_probability: 0.20
+  frequency_response_probability: 0.20
+  speed_factors: [0.97, 1.0, 1.03]
+decision_fusion:
+  classifier_primary: true
+  allow_whisper_only_alerts: false
+  preserve_strong_pending_event_on_low_quality_followup: true
+  require_adsb_resolution: true
+traffic_filter:
+  enabled: true
+  ignore_scheduled_airlines: true
+  ignored_operator_names: []
+  ignored_icao_designators: []
+  ignored_iata_codes: []
+  ignored_callsign_prefixes: []
+  allowed_operator_overrides:
+    - JSX
+  allowed_icao_designators:
+    - JSX
+  allowed_iata_codes: []
+  log_filtered_aircraft: true
+intent_detection:
+  destination_phrase_threshold: 0.82
+  route_context_threshold: 0.72
+  weak_phrase_with_strong_route_threshold: 0.68
+  allow_partial_jet_center_match: true
+  allow_contextual_destination_inference: true
+  preserve_pending_on_low_quality_followup: true
+adsb:
+  provider: adsb_fi
+  base_url: https://opendata.adsb.fi/api
+  polling_interval_seconds: 10
+  timeout_seconds: 5
+  maximum_seen_seconds: 20
+  maximum_taxi_speed_knots: 40
+detection:
+  alert_sensitivity: conservative # conservative, balanced, or never_miss
+  context_window_seconds: 120
+  alert_threshold: 0.80
+  ambiguity_margin: 0.15
+  duplicate_suppression_seconds: 300
+  notify_on_unresolved: false
+  destination_confirmation_delay_seconds: 8
+  destination_correction_window_seconds: 20
+  strong_destination_threshold: 0.90
+  route_intent_threshold: 0.80
+  fuzzy_intent_matching: true
+  fuzzy_intent_minimum_score: 85
+  alert_on_any_destination_mention: false # compatibility setting; bare mentions never create arrivals
+  immediate_notification_on_clear_ground_match: false
+adsb_matching:
+  radius_nm: 5
+  maximum_seen_seconds: 20
+  maximum_ground_speed_knots: 40
+  maximum_low_altitude_feet: 500
+  require_recent_position: true
+  allow_unique_ground_candidate_fallback: true
+  unique_candidate_minimum_confidence: 0.75
+  ambiguity_margin: 0.15
+  fuzzy_callsign_matching: true
+  fuzzy_minimum_score: 85
+  taxi_speed_min_knots: 1
+  taxi_speed_max_knots: 35
+  stopped_speed_max_knots: 1
+  recently_landed_seconds: 180
+  airborne_altitude_threshold_ft: 500
+  minimum_track_points: 2
+adsb_tracking:
+  enabled: true
+  history_seconds: 180
+  stale_after_seconds: 15
+  purge_after_seconds: 300
+  minimum_history_points: 2
+  debug_snapshot_enabled: false
+  debug_snapshot_path: data/adsb_tracker_snapshot.json
+adsb_geofences:
+  kmry_airport:
+    type: circle
+    latitude: null # defaults to the existing airport latitude
+    longitude: null # defaults to the existing airport longitude
+    radius_nm: 2.0
+  runway_area: null # enter verified coordinates before enabling
+  movement_area: null # enter verified coordinates before enabling
+  monterey_jet_center:
+    type: polygon
+    coordinates:
+      - [36.589672, -121.858687]
+      - [36.589794, -121.857533]
+      - [36.588636, -121.856546]
+      - [36.588708, -121.858398]
+      - [36.589672, -121.858687]
+  fbo_geofences: {} # optional additional named circle or polygon FBO ramp geofences
+  approach_ring: null
+adsb_scoring:
+  inside_airport: 25
+  on_ground: 25
+  recently_landed: 30
+  taxi_speed: 15
+  moving_toward_jet_center: 25
+  near_jet_center: 20
+  spoken_registration_exact: 30
+  spoken_registration_fuzzy: 15
+  spoken_callsign_fuzzy: 10
+  recent: 10
+  stale: -40
+  airborne_climbing: -50
+  moving_away: -25
+  departing: -50
+  incomplete: -10
+  duplicate_registration: -30
+adsb_decision:
+  minimum_score: 50
+  minimum_margin: 15
+  maximum_candidate_age_seconds: 15
+  require_on_ground_or_recently_landed: true
+  correlation_window_seconds: 45
+notifications:
+  send_uncertain_alerts: false
+  send_unidentified_arrival_alerts: true
+  allow_repeated_spoken_registration_fallback: true
+  minimum_spoken_registration_observations: 2
+event_history:
+  maximum_events: 1000
+ntfy:
+  enabled: false
+  server_url: https://ntfy.sh
+  topic: ""
+  authorization: "" # optional complete Authorization header value, e.g. "Bearer tk_..."
+logging:
+  live_transcripts: true
+  detection_decisions: true
+  notification_delivery: true
+  verbose_transcripts: false
+  whisper_quality: true
+  adsb_candidates: true
+  format: detailed
+server:
+  host: 127.0.0.1
+  port: 8765
+  pairing_token_file: data/pairing_token.txt
+liveatc:
+  enabled: true
+  authorized_player_url: https://www.liveatc.net/hlisten.php?mount=kmry&icao=kmry
+  authorized_mount: kmry
+  authorized_icao: kmry
+  source_label: liveatc_kmry_web_audio
+  audio_websocket_path: /ws/audio
+  pending_followup_link_seconds: 20

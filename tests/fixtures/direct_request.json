@@ -1,0 +1,8 @@
+{
+  "aircraft": [
+    {"hex": "a12345", "registration": "N123AB", "flight": "N123AB", "aircraft_type": "Cessna Citation 525", "on_ground": true, "ground_speed": 7, "seconds_since_seen": 2}
+  ],
+  "transcripts": [
+    {"text": "Monterey Ground, November one two three alpha bravo, request taxi to Monterey Jet Center."}
+  ]
+}
