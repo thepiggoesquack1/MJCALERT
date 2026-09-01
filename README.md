@@ -19,6 +19,100 @@ not the interactive Globe webpage, and polls every ten seconds. ADS-B data is pr
 
 This first MVP does not provide an installer, historical database, model-management UI, production service manager, or guaranteed aircraft identification. ADS-B API availability and terms can change.
 
+## Download and use on Windows
+
+These steps install the complete application from source. You need Windows 11, Google Chrome,
+Python 3.11 or newer, and an internet connection for the initial Python/Whisper installation and
+live ADS-B data. An NVIDIA GPU is optional; local transcription can run on the CPU.
+
+### 1. Download the project
+
+1. Open the [MJCALERT GitHub repository](https://github.com/thepiggoesquack1/MJCALERT).
+2. Select **Code**, then **Download ZIP**.
+3. Extract the ZIP to a permanent folder such as `Documents\MJCALERT`. Do not run it from inside
+   the ZIP file.
+4. Open the extracted folder in File Explorer, click the address bar, type `powershell`, and press
+   Enter.
+
+Git users may instead run `git clone https://github.com/thepiggoesquack1/MJCALERT.git` and open
+PowerShell in the cloned folder.
+
+### 2. Install the application
+
+Install 64-bit [Python 3.11 or newer](https://www.python.org/downloads/) and enable **Add Python to
+PATH** in the installer. Then run these commands in the project folder:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -e ".[liveatc,control]"
+Copy-Item config.example.yaml config.yaml
+```
+
+The last command creates the private, working configuration. `config.example.yaml` is the public
+template; `config.yaml` is intentionally excluded from Git so that local settings and credentials
+are not published. If `config.yaml` already exists, keep it and do not overwrite it.
+
+### 3. Start the desktop application
+
+Run:
+
+```powershell
+.\.venv\Scripts\python.exe -m mry_alert.control
+```
+
+In **MRY Alert Control**:
+
+1. Confirm that the selected configuration is `config.yaml`. Use **Select Config** if necessary.
+2. Select **Start Server**.
+3. Wait for the backend and configuration indicators to show healthy.
+4. Select **Test Alert** after the Chrome extension is paired in the next step.
+
+The first real audio session may download the configured local Whisper model and can take several
+minutes to become ready. Later launches reuse the downloaded model.
+
+### 4. Install and pair the Chrome extension
+
+1. Open `chrome://extensions` in Chrome.
+2. Enable **Developer mode**.
+3. Select **Load unpacked**, then choose the project's `extension` folder.
+4. Return to MRY Alert Control and select **Copy Pairing Token**.
+5. Open the MRY Alert extension, leave the backend URL as `http://127.0.0.1:8765`, paste the token,
+   and select **Save & connect**.
+6. Confirm that the extension says **Connected**.
+7. Select **Test notification** in the extension or **Test Alert** in the desktop application. A
+   clearly labeled test notification should appear in Windows.
+
+The backend and Chrome must run on the same computer. If Windows notifications do not appear,
+allow notifications for Google Chrome in Windows Settings and make sure Do Not Disturb is off.
+
+### 5. Start authorized monitoring
+
+LiveATC permission described in this repository applies only to the documented internal Monterey
+Jet Center use case; downloading the software does not grant another person permission to capture a
+LiveATC feed. Other users must obtain any required permission and comply with the relevant provider
+terms before enabling capture.
+
+For the authorized KMRY workflow:
+
+1. Keep MRY Alert Control and its backend running.
+2. Open the approved [KMRY LiveATC player](https://www.liveatc.net/hlisten.php?mount=kmry&icao=kmry)
+   in Chrome and start its audio playback.
+3. While that player tab is active, open the extension and select **Start KMRY audio**.
+4. Wait for the extension status to reach **Monitoring**. Keep the player tab open.
+5. Use the desktop dashboard's **Recent Notifications** and **Event History** tabs to review
+   results. The history is cleared whenever the backend is restarted.
+
+To stop, select **Stop** in the extension and **Stop Server** in MRY Alert Control. For future use,
+open PowerShell in the project folder and run only:
+
+```powershell
+.\.venv\Scripts\python.exe -m mry_alert.control
+```
+
+If setup fails, see [Troubleshooting](#troubleshooting) and the
+[Windows control application guide](docs/WINDOWS_CONTROL_APP.md).
+
 ## How it works
 
 Audio arrives as 16 kHz mono signed 16-bit PCM. WebRTC VAD groups speech into individual push-to-talk turns using a 250 ms pre-roll, 350 ms end-silence threshold, and 8-second ceiling. A conservative preprocessing pass removes DC offset and radio rumble, low-passes above 3.8 kHz, normalizes level, and protects against clipping before local `faster-whisper` decoding. Deterministic normalization, callsign parsing, and 120-second contact context then identify destination evidence. A Monterey Jet Center detection remains pending for 8 seconds by default, allowing a same-contact correction before a desktop alert appears.
